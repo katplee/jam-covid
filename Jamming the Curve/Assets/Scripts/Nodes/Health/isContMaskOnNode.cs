@@ -6,10 +6,12 @@ public class isContMaskOnNode : Node
     //The logic returns a success if all contacts are wearing a mask.
     //And returns a failure if at least one of the contacts are not wearing a mask.
 {
+    private CharacterAI self;
     private List<CharacterAI> contacts = new List<CharacterAI>();
 
-    public isContMaskOnNode(List<CharacterAI> contacts)
+    public isContMaskOnNode(CharacterAI self, List<CharacterAI> contacts)
     {
+        this.self = self;
         this.contacts = contacts;
     }
 
@@ -25,6 +27,7 @@ public class isContMaskOnNode : Node
             }
         }
         _nodeState = NodeState.SUCCESS;
+        self.RestartTimers();
         return _nodeState;
     }
 }

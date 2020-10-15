@@ -22,6 +22,7 @@ public class isPlayerMaskOnNode : Node
             return _nodeState;       
         }
         _nodeState = NodeState.SUCCESS;
+        self.RestartTimers();
         return _nodeState;
     }
 }

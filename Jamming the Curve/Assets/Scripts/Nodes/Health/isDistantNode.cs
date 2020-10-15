@@ -31,17 +31,7 @@ public class isDistantNode : Node
             }
         }
         _nodeState = NodeState.SUCCESS;
-        RestartTimers();
+        self.RestartTimers();
         return _nodeState;
-    }
-
-    private void RestartTimers()
-    {
-        self.FetchStop();
-        self.Health_COVID_InfectionCounterOn = false;
-        self.Health_COVID_InfectionCounterDone = false;
-        self.Health_COVID_InfectionCounterRemaining = 0f;
-        self.Health_COVID_CurrentDist = 0f;
-
     }
 }

@@ -34,6 +34,7 @@ public class infectionCountdownNode : Node
         bool isInfectedAtCountEnd =
              IsInContact(ref minDistance, out countdownDist) && CountdownDone(countdownDist);
         //does the countdownDist processed by the CountdownDone method equal the out variable of the IsInContact method?
+        //Update: YES! It does!
         
         return isInfectedAtCountEnd;
     }    
@@ -79,7 +80,7 @@ public class infectionCountdownNode : Node
                 //calls this when timer hasn't started
                 Debug.Log("@ CountdownDone(2)");
                 RestartTimers();
-                CountdownStart(countdownDist);
+                CountdownStart();
                 return false;
             }
 
@@ -92,12 +93,12 @@ public class infectionCountdownNode : Node
             {
                 //calls this while a counter is running, to check whether distance has changed
                 RestartTimers();
-                CountdownStart(countdownDist);
+                CountdownStart();
             }
             else
             {
                 //calls this to resume the countdown of the running timer
-                CountdownStart(countdownDist);
+                CountdownStart();
             }
             return false;
         }
@@ -105,17 +106,16 @@ public class infectionCountdownNode : Node
 
     private void RestartTimers()
     {
-        self.FetchStop();
         self.Health_COVID_InfectionCounterOn = false;
         self.Health_COVID_InfectionCounterDone = false;
         self.Health_COVID_InfectionCounterRemaining = 0f;
     }
 
-    private void CountdownStart(float countdownDist)
+    private void CountdownStart()
     {
         self.Health_COVID_InfectionCounterOn = true;
         self.Health_COVID_InfectionCounterDone = false;
-        self.FetchStart(countdownDist);
+        self.FetchStart();
     }
 }
 

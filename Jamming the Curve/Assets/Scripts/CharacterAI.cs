@@ -7,7 +7,8 @@ public class CharacterAI : MonoBehaviour
 {
     //Non-player character stats
     [SerializeField] private int char_hasMask;
-    [SerializeField] private List<CharacterAI> char_closestContact;
+    [SerializeField] private float char_socDist;
+    public List<CharacterAI> char_closestContact;
 
     //Non-player health stats
     private int health_covid; //health_covid
@@ -28,30 +29,27 @@ public class CharacterAI : MonoBehaviour
 
     private void Awake()
     {
+        RestartTimers();
+        SetSocDistRadius();
         //info_correct_socDist = government.DispatchSocDistInfo;        
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        //char_hasMask = Random.Range(0, 2);
-        //health_covid_isInfected = Random.Range(0, 2);
-
-        health_covid_infectionCounterOn = false;
-        health_covid_infectionCounterDone = false;
-        health_covid_infectionCounterRemaining = 0f;
+        //char_hasMask = Random.Range(0, 2);       
+        //health_covid_isInfected = Random.Range(0, 2);               
         info_correct_socDist = 5f;
 
         ConstructHealthBehaviorTree();
-
     }
 
     private void ConstructHealthBehaviorTree()
     {
         safetyNotificationNode safetyNotification = new safetyNotificationNode();
         isPlayerMaskOnNode isPlayerMaskOn = new isPlayerMaskOnNode(this);
-        isContMaskOnNode isContMaskOn = new isContMaskOnNode(char_closestContact);
-        isContInfectedNode isContInfected = new isContInfectedNode(char_closestContact);
+        isContMaskOnNode isContMaskOn = new isContMaskOnNode(this, char_closestContact);
+        isContInfectedNode isContInfected = new isContInfectedNode(this, char_closestContact);
         isPlayerInfectedNode isPlayerInfected = new isPlayerInfectedNode(this);
         isDistantNode isDistant = new isDistantNode(info_correct_socDist, this, char_closestContact);
         infectionCountdownNode infectionCountdown = new infectionCountdownNode(this, char_closestContact);
@@ -80,15 +78,34 @@ public class CharacterAI : MonoBehaviour
         topHealthNode.Evaluate();
     }
 
+    private void FixedUpdate()
+    {
+        
+    }
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        if(collision.gameObject.CompareTag("Colliders_Detected"))
+        {
+            Debug.Log("A close contact was added.");
+            char_closestContact.Add(collision.transform.parent.GetComponent<CharacterAI>());            
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        Debug.Log("A close contact was removed.");
+        char_closestContact.Remove(collision.transform.parent.GetComponent<CharacterAI>());
+    }
+
     #region //Coroutines
-    public void FetchStart(float countdownDist)
+    public void FetchStart()
     {
         Debug.Log("@ FetchStart()");
-        //StartCoroutine(ExecuteCountdown(countdownDist));
         RawExecuteCountdown();
     }
 
-    public void RawExecuteCountdown()
+    private void RawExecuteCountdown()
     {
         
         if (health_covid_infectionCounterRemaining == 0f)
@@ -103,40 +120,39 @@ public class CharacterAI : MonoBehaviour
         {
             health_covid_infectionCounterDone = true;
             health_covid_infectionCounterOn = false;
-        }
-            
-    }       
-
-    IEnumerator ExecuteCountdown(float countdownDist)
-    {
-        Debug.Log("@ ExecuteCountdown()");
-        for (float i = (float)Mathf.RoundToInt(countdownDist); i > 0; i -= Time.deltaTime)
-        {
-            Debug.Log("Time remaining: " + i);
-            health_covid_infectionCounterRemaining = i;
-            //health_covid_infectionCounterRemaining = Mathf.Clamp(i, 0, info_correct_socDist);
-            yield return new WaitForSeconds(countdownDist);
-            //yield return null;
-            health_covid_infectionCounterOn = false;
-            health_covid_infectionCounterDone = true;            
-        }
+        }           
     }
 
-    public void FetchStop()
+    public void RestartTimers()
     {
-        Debug.Log("@ FetchStop()");
-        //StopAllCoroutines();
+        Health_COVID_InfectionCounterOn = false;
+        Health_COVID_InfectionCounterDone = false;
+        Health_COVID_InfectionCounterRemaining = 0f;
+        Health_COVID_CurrentDist = 0f;
     }
     #endregion
 
-    #region //Nonplayer character stats
+    #region /*/Methods
+    #region /**/Non-player character stats
+    private void SetSocDistRadius()
+    {
+        CircleCollider2D col = Utilities.FindComponentInChildWithTag<CircleCollider2D>(gameObject, "Colliders_Detecting");
+        col.radius = char_socDist;
+    }
+
+    
+    #endregion
+    #endregion
+
+    #region /*/Getters and Setters
+    #region /**/Nonplayer character stats
     public int Char_HasMask
     {
         get { return char_hasMask; }
     }
     #endregion
 
-    #region //Non-player health stats
+    #region /**/Non-player health stats
 
     public int Health_COVID
     {
@@ -176,17 +192,36 @@ public class CharacterAI : MonoBehaviour
 
     #endregion
 
-    #region //Government stats
+    #region /**/Government stats
     public float Info_Correct_SocDist
     {
         get { return info_correct_socDist; }
     }
     #endregion
 
-    #region //Player/non-player health reductions
+    #region /**/Player/non-player health reductions
     public int HealthReduc_infected
     {
         get { return healthReduc_infected; }
     }
     #endregion
+    #endregion
 }
+
+public static class Utilities
+{
+    public static T FindComponentInChildWithTag<T>(this GameObject parent, string tag)
+        where T : Component
+    {
+        Transform t = parent.transform;
+        foreach (Transform tr in t)
+        {
+            if (tr.tag == tag)
+            {
+                return tr.GetComponent<T>();
+            }
+        }
+        return null;
+    }
+}
+
